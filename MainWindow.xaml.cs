@@ -23,13 +23,15 @@ namespace ChatFusion
     public partial class MainWindow : Window
     {
         private const string OpenAiApiUrl = "https://api.openai.com/v1/chat/completions";
-        private const string apiKey = "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";
+        private readonly string apiKey;
         
         public MainWindow()
         {
             InitializeComponent();
             SendMessageToOpenAi("");
             inputBox.Focus();
+            //GPT.ClearAPIKey();
+            apiKey = GPT.GetApiKey();
         }
 
 
@@ -44,15 +46,12 @@ namespace ChatFusion
 
         private void SendMessageToOpenAi(string message)
         {
-            // Create a new RestClient
             var client = new RestClient();
 
-            // Create a new RestRequest
             var request = new RestRequest(OpenAiApiUrl, Method.Post);
             request.AddHeader("Authorization", $"Bearer {apiKey}");
             request.AddHeader("Content-Type", "application/json");
 
-            // Set up the data payload
             var data = new
             {
                 model = "gpt-4",
@@ -63,16 +62,12 @@ namespace ChatFusion
         }
             };
 
-            // Add JSON payload to request
             request.AddJsonBody(data);
 
-            // Execute the request
             var response = client.Execute(request);
 
-            // Process the response
             if (response.IsSuccessful)
             {
-                // Parse the response content
                 var jsonResponse = new JObject();
                 if (response.Content != null)
                 {
@@ -80,7 +75,6 @@ namespace ChatFusion
                 }
                 var assistantResponse = jsonResponse["choices"]?[0]?["message"]?["content"]?.ToString();
 
-                // Display the response content
                 if (!string.IsNullOrEmpty(assistantResponse))
                 {
                     AppendTextToChatBox("GPT", assistantResponse + "\n");
@@ -88,11 +82,9 @@ namespace ChatFusion
             }
             else
             {
-                // Log the error status code and response content
                 Console.WriteLine($"Error Status Code: {response.StatusCode}");
                 Console.WriteLine($"Error Response Content: {response.Content}");
 
-                // Display an error message
                 AppendTextToChatBox("GPT", "Error communicating with GPT-4\n");
             }
         }
